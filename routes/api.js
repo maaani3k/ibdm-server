@@ -13,15 +13,17 @@ let url = 'https://www.imdb.com/search/title?genres=action&sort=user_rating,desc
 router.post('/extract', function (req, res) {
   url = req.body.url;
 
-  rp(url)
+  //server obsługujący zapytanie extract
+
+  rp(url) // dostajesz POST z aplikacji
     .then(function (html) {
-      let $ = cheerio.load(html);
+      let $ = cheerio.load(html); // funkcja pobierająca dane z html'a
 
-      let moviesArray = [];
+      let moviesArray = []; // tworzy zmienną tablicową
 
-      $('#main > div > div.lister.list.detail.sub-list > div > div')
+      $('#main > div > div.lister.list.detail.sub-list > div > div') // tworzy element film
         .each((index, element) => {
-          const rank = $(element)
+          const rank = $(element) // wyciąga poszczególne dane tutaj ranking
             .find('div.lister-item-content > h3 > span.lister-item-index.unbold.text-primary')
             .text()
             .replace('.', '');
@@ -62,7 +64,7 @@ router.post('/extract', function (req, res) {
             .text()
             .replace(/([A-Z])/g, ' $1').trim();
 
-          moviesArray.push({
+          moviesArray.push({ // wrzuca do tablicy
             index: index,
             rank: rank,
             title: title,
@@ -79,7 +81,7 @@ router.post('/extract', function (req, res) {
           })
         })
 
-      res.send(moviesArray)
+      res.send(moviesArray) // przesłanie tablicy z servera do aplikacji
     });
 });
 
@@ -87,9 +89,9 @@ router.post('/extract', function (req, res) {
 router.post('/transform', function (req, res) {
   let movieData = req.body;
 
-  transformedMoviesArray = [];
+  transformedMoviesArray = []; // tworzę tablicę z przetransformowanymi filmami
 
-  movieData.forEach(element => {
+  movieData.forEach(element => { // dla każdej zmiennej tablicy tworzę obiekt zgodnie ze schematem reprezentacji w aplikacji
 
     let movie = new Movie({
       index: element.index,
@@ -109,24 +111,24 @@ router.post('/transform', function (req, res) {
     transformedMoviesArray.push(movie);
   })
 
-  res.send(transformedMoviesArray);
+  res.send(transformedMoviesArray); // wysyła do aplikacji
 });
 
 // handling load request
-router.post('/load', function (req, res) {
+router.post('/load', function (req, res) { // dostajesz przetransformowane dane o filmach i ładujesz do bazy danych
   let movieData = req.body;
 
-  let moviesArray = [];
+  let moviesArray = []; // tworzy tablicę z filmami
 
   movieData.forEach(element => {
-    let movie = new Movie(element);
+    let movie = new Movie(element); // towrzy nowy film ze schematu "Movie"
 
     moviesArray.push(element);
 
     Movie.findOne({
       'link': movie.link,
     },
-      function (err, dbMovie) {
+      function (err, dbMovie) { // funkcja nadpisująca zmiany dotyczące filmu i zapisuje w bazie
         // hanlde err..
         if (dbMovie) {
           movie = new Movie(dbMovie);
@@ -138,13 +140,13 @@ router.post('/load', function (req, res) {
       })
   })
 
-  res.send(moviesArray);
+  res.send(moviesArray); // wrzuca do tablicy
 });
 
 
 
 // handling etl request
-router.get('/etl', function (req, res) {
+router.get('/etl', function (req, res) { //tak jak wyżej tylko po chuj ale jest
 
   rp(url)
     .then(function (html) {
@@ -233,21 +235,21 @@ router.get('/etl', function (req, res) {
     });
 });
 
-// drop table function
+// drop table function czyli kasuje tabelę z bazy danych i servera
 router.get('/drop', function (req, res) {
-  let data = {
+  let data = { // tworzy zmienną liczącą filmy które usuwamy
     movieCount: 0
   };
 
-  Movie.find({}, function (error, movies) {
+  Movie.find({}, function (error, movies) { // funkcja przeszukująca bazę danych i zliczająca wystąpienia wszystkich pozycji
     movies.forEach(function (movie) {
       data.movieCount++;
     });
   })
     .then(() => {
-      res.json(data);
+      res.json(data); // wysyła liczbę do aplikacji
     });
-  dropTable();
+  dropTable(); // usuwa tabelę
 })
 
 module.exports = router;

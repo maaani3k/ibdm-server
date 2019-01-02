@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+const Schema = mongoose.Schema; // wymagany schemat reprezentacji danych w bazie danych
 
-const MovieSchema = new Schema({
+const MovieSchema = new Schema({ // objekt
     index: Number,
     rank: String,
     title: String,
@@ -19,6 +19,6 @@ const MovieSchema = new Schema({
 
 
 
-const Movie = mongoose.model('movie', MovieSchema);
+const Movie = mongoose.model('movie', MovieSchema); // tworzy zmienną i przypisuję obiekt
 
 module.exports = Movie;
